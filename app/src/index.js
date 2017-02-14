@@ -28,10 +28,17 @@ class ProductRow extends React.Component{
 }
 
 class ProductTable extends React.Component{
+	constructor(props) {
+	  super(props);
+	}
 	render(){
 		var rows = [];
 		var lastCategory = null
-		this.props.products.forEach(function (product){
+		this.props.products.forEach((product) => {
+			if(product.name.indexOf(this.props.filterText) === -1 || (
+				!product.stocked && this.props.inStockOnly)){
+				return;
+			}
 			if(product.category !== lastCategory){
 				rows.push(<ProductCategoryRow category={product.category} key={product.category}/>);
 			}
@@ -54,12 +61,19 @@ class ProductTable extends React.Component{
 }
 
 class SearchBar extends React.Component{
+	constructor(props) {
+	  super(props);
+	  this.change = this.change.bind(this);
+	}
+	change(e){
+		this.props.onChange(this.filterTextInput.value, this.inStockOnlyInput.checked);
+	}
 	render(){
 		return(
 			<form>
-				<input type="text" placeholder="搜索" />
+				<input type="text" placeholder="搜索" onChange={this.change}  ref={(input) => this.filterTextInput = input}/>
 				<p>
-					<input type="checkbox"/>
+					<input type="checkbox"  onChange={this.change} ref={(input) => this.inStockOnlyInput = input}/>
 					{' '}
 					Only show products in stock
 				</p>
@@ -69,11 +83,32 @@ class SearchBar extends React.Component{
 }
 
 class FilterableProductTable extends React.Component{
+	constructor(props) {
+	  super(props);
+	
+	  this.state = {filterText: 'ball',inStockOnly: false};
+	  this.change = this.change.bind(this);
+	}
+	change(fv, iv){
+		this.setState({
+			filterText: fv,
+			inStockOnly: iv
+		});
+	}
 	render(){
 		return (
 			<div>
-				<SearchBar />
-				<ProductTable products={this.props.products}/>
+				<SearchBar 
+					filterText={this.state.filterText} 
+					inStockOnly={this.state.inStockOnly}
+					onChange={this.change}
+				/>
+				<ProductTable 
+					products={this.props.products}
+					filterText={this.state.filterText} 
+					inStockOnly={this.state.inStockOnly}
+					onChange = {this.change}
+				/>
 			</div>
 		);
 	}
